@@ -1,6 +1,13 @@
+package endpoints
+
 const (
-	Trade = "https://trade-service.wealthsimple.com"
-    TradePublic = Base + "/public"
-    
-	Status = "https://status.wealthsimple.com"
+	RootHostname  = "wealthsimple.com"
+	MyWeathSimple = "https://my." + RootHostname
+
+	Api = "https://api.production." + RootHostname
+
+	Trade       = "https://trade-service." + RootHostname
+	TradePublic = Trade + "/public"
+
+	Status = "https://status." + RootHostname
 )
