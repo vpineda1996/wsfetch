@@ -1,4 +1,4 @@
-package auth
+package authenticator
 
 import (
 	"fmt"
@@ -6,14 +6,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/vpineda1996/wsfetch/pkg/auth/types"
 )
 
-type HeaderOpts struct {
-	DeviceId  string
-	SessionId string
-}
-
-func BuildHeaders(opts HeaderOpts) http.Header {
+func ExtendHeaders(h *http.Header, deviceId string, otpClaim string) {
 	basicHeaders := map[string]string{
 		"Accept":                "application/json",
 		"Content-Type":          "application/json",
@@ -21,30 +18,27 @@ func BuildHeaders(opts HeaderOpts) http.Header {
 		"X-Wealthsimple-Client": "@wealthsimple/wealthsimple",
 	}
 
-	res := make(http.Header)
 	for k, v := range basicHeaders {
-		res.Add(k, v)
+		h.Add(k, v)
 	}
 
-	if opts.DeviceId != "" {
-		res.Add("x-ws-device-id", opts.DeviceId)
+	if deviceId != "" {
+		h.Add("x-ws-device-id", deviceId)
+		h.Add("x-ws-session-id", "user_"+deviceId)
 	}
 
-	if opts.SessionId != "" {
-		res.Add("x-ws-session-id", opts.SessionId)
+	if otpClaim != "" {
+		h.Add("x-wealthsimple-otp-claim", otpClaim)
 	}
-
-	return res
 }
 
-type TwoFactorAuthHeaders struct {
-	Required           bool
-	Method             string
-	AuthenticatedClaim string
+func InjectAuthClaimWithCode(headers *http.Header, twoFa types.TwoFactorAuthRequest, code string, remember bool) {
+	twoFa.InjectToHeaders(headers)
+	headers.Add("x-wealthsimple-otp", fmt.Sprintf("%s;remember=%t", code, remember))
 }
 
-func Parse2FAHeaders(headers http.Header) (TwoFactorAuthHeaders, error) {
-	ret := TwoFactorAuthHeaders{}
+func Parse2FAHeaders(headers http.Header) (types.TwoFactorAuthRequest, error) {
+	ret := types.TwoFactorAuthRequest{}
 	if headers.Get("x-wealthsimple-otp-required") != "" {
 		v, err := strconv.ParseBool(headers.Get("x-wealthsimple-otp-required"))
 		if err != nil {
