@@ -30,6 +30,7 @@ func NewDefaultFetcher(pc types.PasswordCredentials) SessionFetcher {
 	}
 }
 
+// GetSession gets credentials from a persistent client so it is easier to
 func (df *defaultFetcher) GetSession(ctx context.Context) (*types.Session, error) {
 	if isSessionActive(df.sessionCache) {
 		return &df.sessionCache, nil

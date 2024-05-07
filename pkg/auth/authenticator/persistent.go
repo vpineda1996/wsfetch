@@ -22,6 +22,8 @@ const (
 	configFilePath = "authclient.json"
 )
 
+// Persistent client is not multitenant but it perserves
+// sessions and OTP validations across executions
 func NewPersistentClient() (Client, error) {
 	c, err := restoreAuthClient(configFilePath)
 	if err != nil {
