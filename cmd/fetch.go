@@ -6,10 +6,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vpineda1996/wsfetch/pkg/auth/creds"
 	"github.com/vpineda1996/wsfetch/pkg/auth/types"
+	"github.com/vpineda1996/wsfetch/pkg/cash"
+	"github.com/vpineda1996/wsfetch/pkg/wsclient"
 )
 
 // fetchCmd represents the fetch command
@@ -24,7 +26,8 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("fetch called")
-		_, err := creds.NewDefaultFetcher(types.PasswordCredentials{}).GetSession(context.Background())
+		cl := cash.NewClient(wsclient.DefaultAuthClient(types.PasswordCredentials{}))
+		_, err := cl.Transactions(context.Background(), time.Time{}, time.Time{})
 		if err != nil {
 			panic(err)
 		}

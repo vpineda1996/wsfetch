@@ -2,7 +2,7 @@ package endpoints
 
 const (
 	RootHostname  = "wealthsimple.com"
-	MyWeathSimple = "https://my." + RootHostname
+	MyWeathSimple = "my." + RootHostname
 
-	Api = "https://api.production." + RootHostname
+	Api = "api.production." + RootHostname
 )
