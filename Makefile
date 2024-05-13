@@ -4,6 +4,7 @@ TOOL_DIR := $(BUILD_DIR)/tools
 SCRIPTS_BIN_DIR := $(abspath ./hack/scripts/bin)
 
 MOCKGEN := $(TOOL_DIR)/mockgen
+GENQLIENT := $(TOOL_DIR)/genqlient
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -14,8 +15,11 @@ $(TOOL_DIR): $(BUILD_DIR)
 $(MOCKGEN): $(TOOL_DIR)
 	GOBIN=$(TOOL_DIR) go install github.com/golang/mock/mockgen
 
-generate: $(MOCKGEN)
-	PATH=$(PATH):$(TOOL_DIR):$(SCRIPTS_BIN_DIR) go generate ./...
+$(GENQLIENT): $(TOOL_DIR)
+	GOBIN=$(TOOL_DIR) go install github.com/Khan/genqlient
+
+generate: $(MOCKGEN) $(GENQLIENT)
+	PATH="$(PATH):$(TOOL_DIR):$(SCRIPTS_BIN_DIR)" go generate ./...
 
 
 

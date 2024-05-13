@@ -14,11 +14,11 @@ func ExtendHeaders(h *http.Header, deviceId string) {
 	}
 
 	for k, v := range basicHeaders {
-		h.Add(k, v)
+		h.Set(k, v)
 	}
 
 	if deviceId != "" {
-		h.Add("x-ws-device-id", deviceId)
-		h.Add("x-ws-session-id", "user_"+deviceId)
+		h.Set("x-ws-device-id", deviceId)
+		h.Set("x-ws-session-id", "user_"+deviceId)
 	}
 }

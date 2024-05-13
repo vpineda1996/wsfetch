@@ -1,3 +1,4 @@
 authclient.json
 build
 **/mocks
+graphql_generated.go

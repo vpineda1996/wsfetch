@@ -1,5 +1,7 @@
 package endpoints
 
+import "net/http"
+
 type Route struct {
 	Method string
 	Host   string
@@ -12,8 +14,10 @@ func (r Route) String() string {
 
 var (
 	// Auth Paths
-	MyWealthsimpleLoginSplash = Route{"GET", MyWeathSimple, "/app/login"}
-	MyWealthsimpleSession     = Route{"GET", MyWeathSimple, "/api/sessions"}
+	MyWealthsimpleLoginSplash = Route{http.MethodGet, MyWeathSimple, "/app/login"}
+	MyWealthsimpleSession     = Route{http.MethodPost, MyWeathSimple, "/api/sessions"}
+	MyWealthsimpleGetGraphQl  = Route{http.MethodGet, MyWeathSimple, "/graphql"}
 
-	AuthToken = Route{"POST", Api, "/v1/oauth/v2/token"}
+	AuthToken     = Route{http.MethodPost, Api, "/v1/oauth/v2/token"}
+	AuthTokenInfo = Route{http.MethodGet, Api, "/v1/oauth/v2/token/info"}
 )
