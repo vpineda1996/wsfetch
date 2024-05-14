@@ -6,10 +6,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"github.com/vpineda1996/wsfetch/pkg/auth/creds"
 	"github.com/vpineda1996/wsfetch/pkg/auth/types"
+	"github.com/vpineda1996/wsfetch/pkg/base"
+	"github.com/vpineda1996/wsfetch/pkg/services/cash"
 )
 
 // fetchCmd represents the fetch command
@@ -23,11 +26,17 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx := context.Background()
 		fmt.Println("fetch called")
-		_, err := creds.NewDefaultFetcher(types.PasswordCredentials{}).GetSession(context.Background())
+
+		cl := lo.Must(cash.NewClient(ctx, base.DefaultAuthClient(types.PasswordCredentials{})))
+
+		trns, err := cl.Transactions(ctx, time.Time{}, time.Time{})
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Println(trns)
 	},
 }
 

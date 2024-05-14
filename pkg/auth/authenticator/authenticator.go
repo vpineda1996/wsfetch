@@ -47,6 +47,9 @@ type client struct {
 
 	// client with authenticated information
 	client *http.Client
+
+	// Transport used for requests
+	transport http.RoundTripper
 }
 
 func NewClient() Client {
@@ -63,6 +66,7 @@ func newFromExisting(c *client) {
 		Transport: c,
 	}
 	c.codeFetcher = cfetch.NewCli()
+	c.transport = http.DefaultTransport
 }
 
 var (
@@ -78,7 +82,7 @@ func (c *client) fetchClientIdIfNotSet(ctx context.Context) error {
 	}
 
 	// call "my.wealthsimple.com/app/login" to get cookie
-	req, err := http.NewRequestWithContext(ctx, endpoints.LoginSplash.Method, endpoints.LoginSplash.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, endpoints.MyWealthsimpleLoginSplash.Method, endpoints.MyWealthsimpleLoginSplash.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -136,7 +140,7 @@ func (c *client) Authenticate(ctx context.Context, creds types.PasswordCredentia
 		// parse header to see if its 2FA the issue
 		twoFaHeader, err := Parse2FAHeaders(resp.Header)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing 2FA: (%v) %w", resp.Header, err)
+			return nil, fmt.Errorf("error parsing 2FA: %w", err)
 		}
 
 		// fail the problem is not 2FA
@@ -161,7 +165,7 @@ func (c *client) Authenticate(ctx context.Context, creds types.PasswordCredentia
 		return nil, err
 	}
 
-	s, err := ParseSessionFromBody(body)
+	s, err := ParseSessionFromBody(c.Id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -200,10 +204,10 @@ func (c *client) resolve2FA(ctx context.Context, twoFaHeader types.TwoFactorAuth
 
 func (c *client) RoundTrip(req *http.Request) (*http.Response, error) {
 	ExtendHeaders(&req.Header, c.Id, c.RemeberMeToken)
-	return http.DefaultTransport.RoundTrip(req)
+	return c.transport.RoundTrip(req)
 }
 
-func ParseSessionFromBody(body []byte) (*types.Session, error) {
+func ParseSessionFromBody(deviceId string, body []byte) (*types.Session, error) {
 	type serializedInput struct {
 		AccessToken      string `json:"access_token"`
 		ExpiresInSeconds int    `json:"expires_in"`
@@ -220,6 +224,7 @@ func ParseSessionFromBody(body []byte) (*types.Session, error) {
 
 	exp := time.Now().Add(time.Duration(st.ExpiresInSeconds) * time.Second)
 	return &types.Session{
+		DeviceId:    deviceId,
 		BearerToken: st.AccessToken,
 		Expiry:      &exp,
 	}, nil

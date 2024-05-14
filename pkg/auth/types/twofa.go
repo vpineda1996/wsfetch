@@ -8,6 +8,12 @@ type TwoFactorCodeFetcher interface {
 	Fetch(twoFaHeader TwoFactorAuthRequest) (string, error)
 }
 
+type TwoFactorCodeFetcherFunc func(twoFaHeader TwoFactorAuthRequest) (string, error)
+
+func (c TwoFactorCodeFetcherFunc) Fetch(req TwoFactorAuthRequest) (string, error) {
+	return c(req)
+}
+
 type TwoFactorAuthRequest struct {
 	// Required indicates if 2FA is needed
 	Required bool

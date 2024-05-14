@@ -1,0 +1,62 @@
+query FetchActivityList($first: Int!, $cursor: Cursor, $accountIds: [String!], $endDate: Datetime, $startDate: Datetime!) {
+  activities(
+    first: $first
+    after: $cursor
+    accountIds: $accountIds
+    endDate: $endDate
+    startDate: $startDate
+  ) {
+    edges {
+      node {
+        ...Activity
+        __typename
+      }
+      __typename
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment Activity on ActivityFeedItem {
+  accountId
+  aftOriginatorName
+  aftTransactionCategory
+  aftTransactionType
+  amount
+  amountSign
+  assetQuantity
+  assetSymbol
+  canonicalId
+  currency
+  eTransferEmail
+  eTransferName
+  externalCanonicalId
+  identityId
+  institutionName
+  occurredAt
+  p2pHandle
+  p2pMessage
+  spendMerchant
+  securityId
+  billPayCompanyName
+  billPayPayeeNickname
+  redactedExternalAccountNumber
+  opposingAccountId
+  status
+  subType
+  type
+  strikePrice
+  contractType
+  expiryDate
+  chequeNumber
+  provisionalCreditAmount
+  primaryBlocker
+  interestRate
+  frequency
+  __typename
+}

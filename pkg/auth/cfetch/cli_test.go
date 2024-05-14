@@ -14,7 +14,9 @@ func TestCliFetch(t *testing.T) {
 		out: bytes.NewBuffer([]byte{}),
 		in:  bytes.NewBufferString("100\n5\n"),
 	}
-	result, err := c.Fetch(types.TwoFactorAuthRequest{})
+	result, err := c.Fetch(types.TwoFactorAuthRequest{
+		AuthenticatedClaim: "Some Authentication Claim",
+	})
 
 	g.Expect(err).ToNot(HaveOccurred())
 	g.Expect(result).To(Equal("100"))
