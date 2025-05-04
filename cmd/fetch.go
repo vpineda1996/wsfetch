@@ -5,14 +5,17 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/vpineda1996/wsfetch/pkg/auth/types"
 	"github.com/vpineda1996/wsfetch/pkg/base"
-	"github.com/vpineda1996/wsfetch/pkg/services/cash"
+	"github.com/vpineda1996/wsfetch/pkg/client"
+	"github.com/vpineda1996/wsfetch/pkg/client/generated"
 )
 
 // fetchCmd represents the fetch command
@@ -29,15 +32,76 @@ to quickly create a Cobra application.`,
 		ctx := context.Background()
 		fmt.Println("fetch called")
 
-		cl := lo.Must(cash.NewClient(ctx, base.DefaultAuthClient(types.PasswordCredentials{})))
-
-		trns, err := cl.Transactions(ctx, time.Time{}, time.Time{})
+		var c client.Client
+		session, err := loadSession(ctx)
 		if err != nil {
-			panic(err)
+			fmt.Println("Failed to load session, using password method:", err)
+			var username, password string
+			fmt.Println("Enter your username:")
+			fmt.Scanln(&username)
+			fmt.Println("Enter your password:")
+			fmt.Scanln(&password)
+			authClient := base.DefaultAuthClient(types.PasswordCredentials{
+				Username: username,
+				Password: password,
+			})
+			serializeSession(lo.Must(authClient.Fetcher.GetSession(ctx)))
+			c = lo.Must(client.NewClient(ctx, authClient))
+		} else {
+			fmt.Println("Loaded session from file")
+			authClient := base.AuthClientFromSession(session)
+			serializeSession(lo.Must(authClient.Fetcher.GetSession(ctx)))
+			c = lo.Must(client.NewClient(ctx, authClient))
 		}
 
-		fmt.Println(trns)
+		accounts := lo.Must(c.GetAccounts(ctx))
+		accountIds := lo.Map(accounts, func(a generated.Account, _ int) client.AccountId {
+			return client.AccountId(a.Id)
+		})
+		for _, account := range accounts {
+			fmt.Printf("Account: %s, ID: %s\n", *account.Type, account.Id)
+		}
+		trns := lo.Must(c.Transactions(ctx, accountIds, time.Now().Add(-30*time.Hour*24), lo.ToPtr(time.Now())))
+		prettyPrint(trns)
 	},
+}
+
+const (
+	sessionFile = "session.json"
+)
+
+func prettyPrint(v interface{}) {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		fmt.Println("Failed to marshal JSON:", err)
+		return
+	}
+	fmt.Println(string(b))
+}
+
+func serializeSession(sess *types.Session) {
+	sessFile, err := os.Create(sessionFile)
+	if err != nil {
+		fmt.Println("Failed to create session file:", err)
+		return
+	}
+	defer sessFile.Close()
+	if err := json.NewEncoder(sessFile).Encode(sess); err != nil {
+		fmt.Println("Failed to encode session file:", err)
+	}
+}
+
+func loadSession(ctx context.Context) (*types.Session, error) {
+	var sess *types.Session
+	sessFile, err := os.Open(sessionFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open session file: %w", err)
+	}
+	defer sessFile.Close()
+	if err := json.NewDecoder(sessFile).Decode(&sess); err != nil {
+		return nil, fmt.Errorf("failed to decode session file: %w", err)
+	}
+	return sess, nil
 }
 
 func init() {

@@ -1,10 +1,9 @@
-query FetchActivityList($first: Int!, $cursor: Cursor, $accountIds: [String!], $endDate: Datetime, $startDate: Datetime!) {
-  activities(
+query FetchActivityFeedItems($first: Int, $cursor: Cursor, $condition: ActivityCondition, $orderBy: [ActivitiesOrderBy!] = OCCURRED_AT_DESC) {
+  activityFeedItems(
     first: $first
     after: $cursor
-    accountIds: $accountIds
-    endDate: $endDate
-    startDate: $startDate
+    condition: $condition
+    orderBy: $orderBy
   ) {
     edges {
       node {
@@ -58,5 +57,13 @@ fragment Activity on ActivityFeedItem {
   primaryBlocker
   interestRate
   frequency
+  counterAssetSymbol
+  rewardProgram
+  counterPartyCurrency
+  counterPartyCurrencyAmount
+  counterPartyName
+  fxRate
+  fees
+  reference
   __typename
 }

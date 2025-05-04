@@ -61,7 +61,7 @@ func Test_Client_2FA(t *testing.T) {
 			g := NewWithT(t)
 			c := &client{
 				ShouldRemember2FA: tc.rememberMe,
-				RemeberMeToken:    tc.remeberMeToken,
+				RefreshOtpToken:   tc.remeberMeToken,
 			}
 			newFromExisting(c)
 			callCount := 0
@@ -109,9 +109,9 @@ func Test_Client_2FA(t *testing.T) {
 			g.Expect(callCount).To(Equal(1))
 			g.Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			if tc.rememberMe {
-				g.Expect(c.RemeberMeToken).To(Equal(testSomeOtpClaim))
+				g.Expect(c.RefreshOtpToken).To(Equal(testSomeOtpClaim))
 			} else {
-				g.Expect(c.RemeberMeToken).To(Equal(tc.remeberMeToken))
+				g.Expect(c.RefreshOtpToken).To(Equal(tc.remeberMeToken))
 			}
 		})
 	}
@@ -125,9 +125,9 @@ func Test_ParseSessionFromBody(t *testing.T) {
 		"\"refresh_token\":\"8lahDQ_5ock11Tjvf6tR_pfEEDbddPeaMtTHAo9S4Ds\"," +
 		"\"scope\":\"invest.read trade.read tax.read\",\"created_at\":1715053576}"
 
-	sess, err := ParseSessionFromBody("deviceId", []byte(token))
+	sess, err := ParseSessionFromBody([]byte(token))
 	g.Expect(err).ToNot(HaveOccurred())
-	g.Expect(sess.DeviceId).ToNot(BeEmpty())
-	g.Expect(sess.BearerToken).ToNot(BeEmpty())
+	g.Expect(sess.RefreshToken).ToNot(BeEmpty())
+	g.Expect(sess.AccessToken).ToNot(BeEmpty())
 	g.Expect(time.Until(*sess.Expiry)).Should(BeNumerically("~", 3500*time.Second, 3700*time.Second))
 }

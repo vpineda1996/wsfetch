@@ -10,8 +10,10 @@ import (
 	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"github.com/vpineda1996/wsfetch/pkg/auth/cfetch"
 	"github.com/vpineda1996/wsfetch/pkg/auth/types"
@@ -24,23 +26,33 @@ var (
 	wsUrl = lo.Must(url.Parse("https://wealthsimple.com"))
 )
 
+type AuthPayloadCreator interface {
+	AuthPayload(clientId string) ([]byte, error)
+	Profile() string
+}
+
 type Client interface {
-	Authenticate(ctx context.Context, creds types.PasswordCredentials) (*types.Session, error)
+	Authenticate(ctx context.Context, creds AuthPayloadCreator) (*types.Session, error)
 }
 
 type client struct {
 	// The client id is provided by Wealthsimple
 	// and its issued to all clients
-	Id string `json:"id"`
+	ClientId string
+
+	// The WSSID is the id that seems to be used
+	// to identify the current device
+	// WSSID string
+	WSSID string
 
 	// ShouldRemember2FA configures the remeber me
 	// token to be remebered by WS and possibly reused in
 	// the future
-	ShouldRemember2FA bool `json:"shouldRemember2FA"`
+	ShouldRemember2FA bool
 
 	// OTP remember me token is used to re-authenticate
 	// with Wealthsimple, skipping 2FA
-	RemeberMeToken string `json:"rememberMeToken"`
+	RefreshOtpToken string
 
 	// 2FA fetcher
 	codeFetcher types.TwoFactorCodeFetcher
@@ -60,6 +72,17 @@ func NewClient() Client {
 	return c
 }
 
+func NewClientFromSession(s *types.Session) Client {
+	c := &client{
+		ShouldRemember2FA: true,
+		WSSID:             s.WSSID,
+		ClientId:          s.ClientId,
+		RefreshOtpToken:   s.RefreshOtpToken,
+	}
+	newFromExisting(c)
+	return c
+}
+
 func newFromExisting(c *client) {
 	c.client = &http.Client{
 		Jar:       lo.Must(cookiejar.New(&cookiejar.Options{})),
@@ -74,10 +97,10 @@ var (
 	_ Client            = &client{}
 )
 
-// fetchClientIdIfNotSet does a simple call to WS to just get
-// the client ID and stores it in cookies
-func (c *client) fetchClientIdIfNotSet(ctx context.Context) error {
-	if c.Id != "" {
+// fetchWssidIfNotSet does a simple call to WS to just get
+// the WSSID and stores it in cookies
+func (c *client) fetchWssidIfNotSet(ctx context.Context) error {
+	if c.WSSID != "" {
 		return nil
 	}
 
@@ -94,7 +117,7 @@ func (c *client) fetchClientIdIfNotSet(ctx context.Context) error {
 	log.Infow("Queried for wssdi", "respStatus", resp.Status)
 
 	// find wssdi cookie
-	wssCookie, wssFound := lo.Find(c.client.Jar.Cookies(wsUrl), func(cookie *http.Cookie) bool {
+	wssidCookie, wssFound := lo.Find(c.client.Jar.Cookies(wsUrl), func(cookie *http.Cookie) bool {
 		return cookie.Name == "wssdi"
 	})
 
@@ -102,22 +125,85 @@ func (c *client) fetchClientIdIfNotSet(ctx context.Context) error {
 		return fmt.Errorf("wssdi not found in first request: %v", c.client.Jar.Cookies(wsUrl))
 	}
 
-	c.Id = wssCookie.Value
-	log.Infow("Id for client is now", "id", c.Id)
+	c.WSSID = wssidCookie.Value
+	log.Infow("Id for client is now", "id", c.WSSID)
+	return nil
+}
+
+func (c *client) fetchClientIdIfNotSet(ctx context.Context) error {
+	if c.ClientId != "" {
+		return nil
+	}
+
+	// call "my.wealthsimple.com/app/login" to get cookie
+	req, err := http.NewRequestWithContext(ctx, endpoints.MyWealthsimpleLoginSplash.Method, endpoints.MyWealthsimpleLoginSplash.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	bits, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	responseStr := string(bits)
+
+	re := regexp.MustCompile(`(?i)<script.*src="(.+/app-[a-f0-9]+\.js)`)
+	matches := re.FindStringSubmatch(responseStr)
+	if len(matches) <= 1 {
+		return fmt.Errorf("couldn't find app JS URL in login page response body")
+	}
+
+	appJSURL := matches[1]
+
+	// go to the app url to find the clientId
+	req, err = http.NewRequestWithContext(ctx, http.MethodGet, appJSURL, nil)
+	if err != nil {
+		return err
+	}
+	resp, err = c.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	bits, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	responseStr = string(bits)
+
+	// Look for clientId in the app JS file
+	re = regexp.MustCompile(`(?i)production:.*clientId:"([a-f0-9]+)"`)
+	matches = re.FindStringSubmatch(responseStr)
+	if len(matches) <= 1 {
+		return fmt.Errorf("couldn't find clientId in app JS file response body")
+	}
+	c.ClientId = matches[1]
+	log.Infow("Using clientId", "clientId", c.ClientId)
 	return nil
 }
 
 // Authenticate is the main entry point where we call the auth API
 // to fetch credentials
-func (c *client) Authenticate(ctx context.Context, creds types.PasswordCredentials) (*types.Session, error) {
+func (c *client) Authenticate(ctx context.Context, creds AuthPayloadCreator) (*types.Session, error) {
 	log.Infow("Starting authentication", "creds", creds)
 
-	err := c.fetchClientIdIfNotSet(ctx)
+	err := c.fetchWssidIfNotSet(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenReqBody, err := creds.AuthPayload()
+	err = c.fetchClientIdIfNotSet(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenReqBody, err := creds.AuthPayload(c.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +216,7 @@ func (c *client) Authenticate(ctx context.Context, creds types.PasswordCredentia
 		return nil, err
 	}
 
+	req.Header.Add("x-ws-profile", creds.Profile())
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -145,8 +232,9 @@ func (c *client) Authenticate(ctx context.Context, creds types.PasswordCredentia
 
 		// fail the problem is not 2FA
 		if !twoFaHeader.Required {
+			dreq, _ := httputil.DumpRequest(req, false)
 			dr, _ := httputil.DumpResponse(resp, true)
-			return nil, fmt.Errorf("unable to authenticate, dump: %s", string(dr))
+			return nil, fmt.Errorf("unable to authenticate, req: %s, res: %s", string(dreq), string(dr))
 		}
 
 		resp, err = c.resolve2FA(ctx, twoFaHeader, tokenReqBody)
@@ -165,10 +253,12 @@ func (c *client) Authenticate(ctx context.Context, creds types.PasswordCredentia
 		return nil, err
 	}
 
-	s, err := ParseSessionFromBody(c.Id, body)
+	s, err := ParseSessionFromBody(body)
 	if err != nil {
 		return nil, err
 	}
+	s.ClientId = c.ClientId
+	s.WSSID = c.WSSID
 	log.Infow("Resolved session", "sessionCreds", s)
 	return s, nil
 
@@ -196,20 +286,21 @@ func (c *client) resolve2FA(ctx context.Context, twoFaHeader types.TwoFactorAuth
 	}
 
 	if resp.StatusCode == http.StatusOK && c.ShouldRemember2FA {
-		c.RemeberMeToken = resp.Header.Get("x-wealthsimple-otp-claim")
+		c.RefreshOtpToken = resp.Header.Get("x-wealthsimple-otp-claim")
 	}
 
 	return resp, nil
 }
 
 func (c *client) RoundTrip(req *http.Request) (*http.Response, error) {
-	ExtendHeaders(&req.Header, c.Id, c.RemeberMeToken)
+	ExtendHeaders(&req.Header, c.WSSID, c.RefreshOtpToken)
 	return c.transport.RoundTrip(req)
 }
 
-func ParseSessionFromBody(deviceId string, body []byte) (*types.Session, error) {
+func ParseSessionFromBody(body []byte) (*types.Session, error) {
 	type serializedInput struct {
 		AccessToken      string `json:"access_token"`
+		RefreshToken     string `json:"refresh_token"`
 		ExpiresInSeconds int    `json:"expires_in"`
 	}
 	var st serializedInput
@@ -224,9 +315,10 @@ func ParseSessionFromBody(deviceId string, body []byte) (*types.Session, error) 
 
 	exp := time.Now().Add(time.Duration(st.ExpiresInSeconds) * time.Second)
 	return &types.Session{
-		DeviceId:    deviceId,
-		BearerToken: st.AccessToken,
-		Expiry:      &exp,
+		AccessToken:  st.AccessToken,
+		RefreshToken: st.RefreshToken,
+		Expiry:       &exp,
+		SessionId:    uuid.Must(uuid.NewRandom()).String(),
 	}, nil
 
 }

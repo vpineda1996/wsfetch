@@ -1,0 +1,78 @@
+input SecuritySearchInput {
+  query: String!
+}
+
+type SecuritySearchResult {
+  results: [Security!]
+}
+
+type Security {
+  id: ID!
+  buyable: Boolean
+  status: String
+  stock: Stock
+  securityGroups: [SecurityGroup!]
+  quoteV2: EquityQuote
+  allowedOrderSubtypes: [String!]
+  marginRates: MarginRates
+  fundamentals: Fundamentals
+  quote: Quote
+  historicalQuotes(timeRange: String = "1d"): [HistoricalQuote!]
+}
+
+type Stock {
+  symbol: String!
+  name: String
+  primaryExchange: String
+  primaryMic: String
+}
+
+type SecurityGroup {
+  id: ID!
+  name: String
+}
+
+
+type EquityQuote {
+  marketStatus: String
+}
+
+type MarginRates {
+  clientMarginRate: Float!
+}
+
+type Fundamentals {
+  avgVolume: Float!
+  high52Week: Float!
+  low52Week: Float!
+  yield: Float!
+  peRatio: Float!
+  marketCap: Float!
+  currency: String!
+  description: String
+}
+
+type Quote {
+  bid: String!
+  ask: String!
+  open: String!
+  high: String!
+  low: String!
+  volume: Int!
+  askSize: Int!
+  bidSize: Int!
+  last: String!
+  lastSize: Int!
+  quotedAsOf: Date
+  quoteDate: Date
+  amount: String!
+  previousClose: String!
+}
+
+type HistoricalQuote {
+  adjustedPrice: String
+  currency: String
+  date: Date
+  securityId: ID
+  time: String # Could be Time if the actual type is known
+}

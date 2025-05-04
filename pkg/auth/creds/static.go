@@ -16,7 +16,7 @@ var (
 
 // GetSession gets credentials from a persistent client so it is easier to
 func (t StaticTokenFetcher) GetSession(ctx context.Context) (*types.Session, error) {
-	if isSessionActive(types.Session(t)) {
+	if isSessionActive(lo.ToPtr(types.Session(t))) {
 		return nil, fmt.Errorf("session has expired")
 	}
 	return lo.ToPtr(types.Session(t)), nil

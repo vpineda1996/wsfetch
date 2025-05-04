@@ -1,0 +1,145 @@
+# ####################################
+# 
+#          Common Schema
+#
+# ####################################
+
+type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String!
+}
+
+# ####################################
+# 
+#          Identity Schema
+#
+# ####################################
+
+type Identity {
+  id: ID!
+  accounts(filter: AccountFilterInput, first: Int, after: String): AccountConnection
+}
+
+input AccountFilterInput {
+  dummy: String
+}
+
+type AccountConnection {
+  pageInfo: PageInfo!
+  edges: [AccountEdge!]!
+}
+
+type AccountEdge {
+  cursor: String!
+  node: Account!
+}
+
+type Account {
+  id: ID!
+  archivedAt: Date
+  branch: String
+  closedAt: Date
+  createdAt: Date!
+  cacheExpiredAt: Date
+  currency: String
+  nickname: String
+  status: String!
+  tags: [String]
+  linkedAccount: Account
+  custodianAccounts: [CustodianAccount!]!
+  financials: AccountFinancials!
+  type: String
+  
+  requiredIdentityVerification: String
+  unifiedAccountType: String
+  supportedCurrencies: [String!]
+  accountOwnerConfiguration: String
+  accountFeatures: [AccountFeature!]
+  accountOwners: [AccountOwner!]
+}
+
+type AccountOwner {
+  accountId: String!
+  identityId: String!
+  accountNickname: String
+  clientCanonicalId: String!
+  accountOpeningAgreementsSigned: Boolean
+  name: String!
+  email: String!
+  ownershipType: String!
+  activeInvitation: [AccountOwnerInvitation!]
+  sentInvitations: [AccountOwnerInvitation!]
+}
+
+type AccountOwnerInvitation {
+  id: String!
+  createdAt: Date
+  inviteeName: String
+  inviteeEmail: String
+  inviterName: String
+  inviterEmail: String
+  updatedAt: String
+  sentAt: String
+  status: String
+}
+
+type AccountFeature {
+  name: String!
+  enabled: Boolean!
+}
+
+type CustodianAccount {
+  id: ID!
+  branch: String
+  custodian: String
+  status: String!
+  updatedAt: Date
+  financials: CustodianAccountFinancials
+}
+
+type CustodianAccountFinancials {
+  current: CustodianAccountCurrentFinancialValues
+  balance: [Balance!]
+}
+
+type Balance {
+  quantity: String!
+  securityId: String!
+}
+
+type CustodianAccountCurrentFinancialValues {
+  deposits: Money!
+  earnings: Money!
+  netDeposits: Money!
+  netLiquidationValue: Money!
+  withdrawals: Money!
+}
+
+type AccountFinancials {
+  currentCombined: AccountCurrentFinancials
+}
+
+type AccountCurrentFinancials {
+  id: ID!
+  netLiquidationValueV2: Money
+  netDeposits: Money
+  simpleReturns(referenceDate: Date): SimpleReturns
+  totalDeposits: Money
+  totalWithdrawals: Money
+}
+
+type Money {
+  amount: String!
+  cents: Int!
+  currency: String!
+}
+
+type SimpleReturns {
+  amount: Money!
+  asOf: Date
+  rate: String!
+  referenceDate: Date
+}
+
+scalar Date
+scalar Cursor

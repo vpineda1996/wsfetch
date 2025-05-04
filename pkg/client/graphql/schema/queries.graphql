@@ -1,0 +1,13 @@
+type Query {
+    # Fetch account information
+    identity(id: ID): Identity!
+    # Fetch account acctivity
+    activityFeedItems (
+      first: Int, 
+      after: Cursor, 
+      condition: ActivityCondition, 
+      orderBy: [ActivitiesOrderBy!] = OCCURRED_AT_DESC): ActivityFeedItemConnection
+  
+  # Fetch market data
+  security(id: ID!): Security!
+}

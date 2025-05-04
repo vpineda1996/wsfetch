@@ -23,6 +23,10 @@ func DefaultAuthClient(pc types.PasswordCredentials) *Wealthsimple {
 	return AuthClientFromFetcher(creds.NewDefaultFetcher(pc))
 }
 
+func AuthClientFromSession(session *types.Session) *Wealthsimple {
+	return AuthClientFromFetcher(creds.NewFetcherFromExistingSession(session))
+}
+
 func StatictAuthClient(session types.Session) *Wealthsimple {
 	return AuthClientFromFetcher(creds.StaticTokenFetcher(session))
 }
@@ -55,13 +59,13 @@ var (
 	myWealthsimpleUrl = lo.Must(url.Parse(endpoints.MyWeathSimple))
 )
 
-type ClientIdentifiers struct {
+type TokenInformation struct {
 	UserId            string
 	IdentityId        string
 	ProfileToClientId map[WsProfile]string
 }
 
-func (c *Wealthsimple) ClientIdentifiers(ctx context.Context) (*ClientIdentifiers, error) {
+func (c *Wealthsimple) GetTokenInformation(ctx context.Context) (*TokenInformation, error) {
 	sess, err := c.Fetcher.GetSession(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve credentials: %w", err)
@@ -104,7 +108,7 @@ func (c *Wealthsimple) ClientIdentifiers(ctx context.Context) (*ClientIdentifier
 		prfToClientId[k] = v.Default
 	}
 
-	return &ClientIdentifiers{
+	return &TokenInformation{
 		UserId:            jsonResponse.UserId,
 		IdentityId:        jsonResponse.IdentityId,
 		ProfileToClientId: prfToClientId,
@@ -127,9 +131,9 @@ func (c *Wealthsimple) Do(r *http.Request) (*http.Response, error) {
 }
 
 func (c *Wealthsimple) populateStandardAndAuthHeaders(req *http.Request, sess *types.Session) {
-	httputil.ExtendHeaders(&req.Header, sess.DeviceId)
+	httputil.ExtendHeaders(&req.Header, sess.ClientId)
 	req.Header.Set("x-ws-profile", string(c.Profile))
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", sess.BearerToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", sess.AccessToken))
 }
 
 // TODO refactor this into a wrapper of th do method
@@ -151,7 +155,7 @@ func (c *Wealthsimple) hydrateSessionJar(ctx context.Context, originalUrl *url.U
 
 	data := map[string]map[string]string{
 		"session": {
-			"access_token": sess.BearerToken,
+			"access_token": sess.AccessToken,
 		},
 	}
 	serializedData, err := json.Marshal(data)
@@ -186,16 +190,16 @@ func AuthClientFromFetcher(fetcher creds.SessionFetcher) *Wealthsimple {
 		Jar:     jar,
 		delegate: &http.Client{
 			Jar: jar,
-			Transport: httputil.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
-				d, _ := ghttputil.DumpRequest(r, true)
-				fmt.Println(string(d))
-				res, err := http.DefaultTransport.RoundTrip(r)
-				if err == nil {
-					d, _ := ghttputil.DumpResponse(res, true)
-					fmt.Println(string(d))
-				}
-				return res, err
-			}),
+			// Transport: httputil.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
+			// 	d, _ := ghttputil.DumpRequest(r, true)
+			// 	fmt.Println(string(d))
+			// 	res, err := http.DefaultTransport.RoundTrip(r)
+			// 	if err == nil {
+			// 		d, _ := ghttputil.DumpResponse(res, true)
+			// 		fmt.Println(string(d))
+			// 	}
+			// 	return res, err
+			// }),
 		},
 		Profile: Invest,
 	}

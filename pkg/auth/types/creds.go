@@ -8,7 +8,7 @@ type PasswordCredentials struct {
 	Password string
 }
 
-func (pc PasswordCredentials) AuthPayload() ([]byte, error) {
+func (pc PasswordCredentials) AuthPayload(clientId string) ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"grant_type":     "password",
 		"username":       pc.Username,
@@ -18,6 +18,10 @@ func (pc PasswordCredentials) AuthPayload() ([]byte, error) {
 		// TODO: remove unecessary permissions here
 		"scope": "invest.read trade.read tax.read",
 		// magic string from WS
-		"client_id": "4da53ac2b03225bed1550eba8e4611e086c7b905a3855e6ed12ea08c246758fa",
+		"client_id": clientId,
 	})
+}
+
+func (s PasswordCredentials) Profile() string {
+	return "undefined"
 }

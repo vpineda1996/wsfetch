@@ -1,0 +1,57 @@
+query FetchSecurityMarketData($id: ID!) {
+  security(id: $id) {
+    id
+    ...SecurityMarketData
+    __typename
+  }
+}
+
+fragment SecurityMarketData on Security {
+  id
+  allowedOrderSubtypes
+  marginRates {
+    ...MarginRates
+    __typename
+  }
+  fundamentals {
+    avgVolume
+    high52Week
+    low52Week
+    yield
+    peRatio
+    marketCap
+    currency
+    description
+    __typename
+  }
+  quote {
+    bid
+    ask
+    open
+    high
+    low
+    volume
+    askSize
+    bidSize
+    last
+    lastSize
+    quotedAsOf
+    quoteDate
+    amount
+    previousClose
+    __typename
+  }
+  stock {
+    primaryExchange
+    primaryMic
+    name
+    symbol
+    __typename
+  }
+  __typename
+}
+
+fragment MarginRates on MarginRates {
+  clientMarginRate
+  __typename
+}

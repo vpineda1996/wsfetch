@@ -1,0 +1,208 @@
+"""
+Connection type for activity feed items implementing cursor-based pagination
+"""
+type ActivityFeedItemConnection {
+  """List of activity feed item edges"""
+  edges: [ActivityFeedItemEdge!]!
+  
+  """Pagination information"""
+  pageInfo: PageInfo!
+}
+
+"""Edge type for activity feed items"""
+type ActivityFeedItemEdge {
+  """The activity feed item"""
+  node: ActivityFeedItem!
+}
+
+"""
+Activity feed item representing various financial activities
+"""
+type ActivityFeedItem {
+  """Associated account identifier"""
+  accountId: ID!
+  
+  """Name of the AFT originator"""
+  aftOriginatorName: String
+  
+  """Category of the AFT transaction"""
+  aftTransactionCategory: String
+  
+  """Type of the AFT transaction"""
+  aftTransactionType: String
+  
+  """Amount of the transaction"""
+  amount: String!
+  
+  """Sign of the amount (positive/negative)"""
+  amountSign: String!
+  
+  """Quantity of the asset"""
+  assetQuantity: String!
+  
+  """Symbol of the asset"""
+  assetSymbol: String
+  
+  """Canonical identifier"""
+  canonicalId: ID
+  
+  """Currency used in the transaction"""
+  currency: String
+  
+  """Email for e-transfer"""
+  eTransferEmail: String
+  
+  """Name for e-transfer"""
+  eTransferName: String
+  
+  """External canonical identifier"""
+  externalCanonicalId: ID
+  
+  """Identity identifier"""
+  identityId: ID
+  
+  """Name of the financial institution"""
+  institutionName: String
+  
+  """When the activity occurred"""
+  occurredAt: Date
+  
+  """P2P handle"""
+  p2pHandle: String
+  
+  """P2P message"""
+  p2pMessage: String
+  
+  """Merchant name for spending transactions"""
+  spendMerchant: String
+  
+  """Security identifier"""
+  securityId: ID
+  
+  """Bill payment company name"""
+  billPayCompanyName: String
+  
+  """Bill payment payee nickname"""
+  billPayPayeeNickname: String
+  
+  """Redacted external account number"""
+  redactedExternalAccountNumber: String
+  
+  """Opposing account identifier"""
+  opposingAccountId: ID
+  
+  """Status of the activity"""
+  status: String
+  
+  """Subtype of the activity"""
+  subType: ActivitySubtype!
+  
+  """Type of the activity"""
+  type: ActivityType!
+  
+  """Strike price for options"""
+  strikePrice: String
+  
+  """Type of contract"""
+  contractType: String
+  
+  """Expiry date for contracts"""
+  expiryDate: Date
+  
+  """Cheque number"""
+  chequeNumber: String
+  
+  """Provisional credit amount"""
+  provisionalCreditAmount: String
+  
+  """Primary blocker"""
+  primaryBlocker: String
+  
+  """Interest rate"""
+  interestRate: String
+  
+  """Frequency"""
+  frequency: String
+  
+  """Symbol of the counter asset"""
+  counterAssetSymbol: String
+  
+  """Reward program"""
+  rewardProgram: String
+  
+  """Currency of the counter party"""
+  counterPartyCurrency: String
+  
+  """Counter party currency amount"""
+  counterPartyCurrencyAmount: String
+  
+  """Name of the counter party"""
+  counterPartyName: String
+  
+  """Foreign exchange rate"""
+  fxRate: String
+  
+  """Fees associated with the transaction"""
+  fees: String
+  
+  """Reference information"""
+  reference: String
+}
+
+"""
+Input type to filter activity feed items
+"""
+input ActivityCondition {
+  """Filter by account ID"""
+  accountIds: [ID!]
+  
+  """Filter by date range"""
+  endDate: Date
+}
+
+"""
+Enum for ordering activity feed items
+"""
+enum ActivitiesOrderBy {
+  """Order by occurrence date descending (newest first)"""
+  OCCURRED_AT_DESC
+  
+  """Order by occurrence date ascending (oldest first)"""
+  OCCURRED_AT_ASC
+}
+
+
+enum ActivityType {
+    INTERNAL_TRANSFER
+    DIY_BUY
+    DIY_SELL
+    DEPOSIT
+    WITHDRAWAL
+    REFUND
+    INSTITUTIONAL_TRANSFER_INTENT
+    INTEREST
+    DIVIDEND
+    FUNDS_CONVERSION
+    NON_RESIDENT_TAX
+    P2P_PAYMENT
+    PROMOTION
+    REFERRAL
+}
+
+enum ActivitySubtype {
+    SOURCE
+    E_TRANSFER
+    E_TRANSFER_FUNDING
+    PAYMENT_CARD_TRANSACTION
+    EFT
+    AFT
+    TRANSFER_FEE_REFUND
+    TRANSFER_IN
+    
+    FPL_INTEREST
+    BILL_PAY
+
+    SEND
+    SEND_RECEIVED
+    INCENTIVE_BONUS
+}

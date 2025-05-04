@@ -1,8 +1,9 @@
 # Default genqlient config; for full documentation see:
 # https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
-schema: schema.graphql
+schema: 
+  - ./../graphql/schema/*.graphql
 operations:
-- fetch_*.graphql
+  - ./../graphql/queries/*.graphql
 generated: graphql_generated.go
 optional: pointer
 bindings:
@@ -11,6 +12,11 @@ bindings:
   Datetime:
     type: time.Time
     marshaler: github.com/vpineda1996/wsfetch/internal/marshalling.MarshalTimeToDateTime
+    unmarshaler: github.com/vpineda1996/wsfetch/internal/marshalling.UnmarshalStringToDateTime
+  Date:
+    type: time.Time
+    marshaler: github.com/vpineda1996/wsfetch/internal/marshalling.MarshalTimeToDateTime
+    unmarshaler: github.com/vpineda1996/wsfetch/internal/marshalling.UnmarshalStringToDateTime
   ActivityFeedItemType:
     type: string
   ActivityFeedItemSubType:

@@ -10,8 +10,8 @@ import (
 	"github.com/vpineda1996/wsfetch/pkg/auth/types"
 )
 
-func ExtendHeaders(h *http.Header, deviceId string, otpClaim string) {
-	httputil.ExtendHeaders(h, deviceId)
+func ExtendHeaders(h *http.Header, wssid string, otpClaim string) {
+	httputil.ExtendHeaders(h, wssid)
 
 	if otpClaim != "" {
 		h.Add("x-wealthsimple-otp-claim", otpClaim)

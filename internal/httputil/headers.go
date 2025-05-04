@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func ExtendHeaders(h *http.Header, deviceId string) {
+func ExtendHeaders(h *http.Header, wssid string) {
 	basicHeaders := map[string]string{
 		"Accept":                "application/json",
 		"Content-Type":          "application/json",
@@ -17,8 +17,8 @@ func ExtendHeaders(h *http.Header, deviceId string) {
 		h.Set(k, v)
 	}
 
-	if deviceId != "" {
-		h.Set("x-ws-device-id", deviceId)
-		h.Set("x-ws-session-id", "user_"+deviceId)
+	if wssid != "" {
+		h.Set("x-ws-device-id", wssid)
+		h.Set("x-ws-session-id", "user_"+wssid)
 	}
 }
