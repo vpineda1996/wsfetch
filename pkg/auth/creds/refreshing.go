@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/vpineda1996/wsfetch/pkg/auth/authenticator"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/auth/authenticator"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
 )
 
 // SessionFetcher fetches an active session

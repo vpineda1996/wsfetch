@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/vpineda1996/wsfetch/pkg/client/generated"
+	"github.com/vpnda/wsfetch/pkg/client/generated"
 )
 
 // Transactions implements Client.

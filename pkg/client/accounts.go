@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/samber/lo"
-	"github.com/vpineda1996/wsfetch/pkg/client/generated"
+	"github.com/vpnda/wsfetch/pkg/client/generated"
 )
 
 func (c *client) GetAccounts(ctx context.Context) ([]generated.Account, error) {

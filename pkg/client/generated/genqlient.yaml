@@ -11,12 +11,12 @@ bindings:
     type: string
   Datetime:
     type: time.Time
-    marshaler: github.com/vpineda1996/wsfetch/internal/marshalling.MarshalTimeToDateTime
-    unmarshaler: github.com/vpineda1996/wsfetch/internal/marshalling.UnmarshalStringToDateTime
+    marshaler: github.com/vpnda/wsfetch/internal/marshalling.MarshalTimeToDateTime
+    unmarshaler: github.com/vpnda/wsfetch/internal/marshalling.UnmarshalStringToDateTime
   Date:
     type: time.Time
-    marshaler: github.com/vpineda1996/wsfetch/internal/marshalling.MarshalTimeToDateTime
-    unmarshaler: github.com/vpineda1996/wsfetch/internal/marshalling.UnmarshalStringToDateTime
+    marshaler: github.com/vpnda/wsfetch/internal/marshalling.MarshalTimeToDateTime
+    unmarshaler: github.com/vpnda/wsfetch/internal/marshalling.UnmarshalStringToDateTime
   ActivityFeedItemType:
     type: string
   ActivityFeedItemSubType:

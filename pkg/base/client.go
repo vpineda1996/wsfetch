@@ -12,10 +12,10 @@ import (
 	"net/url"
 
 	"github.com/samber/lo"
-	"github.com/vpineda1996/wsfetch/internal/httputil"
-	"github.com/vpineda1996/wsfetch/pkg/auth/creds"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
-	"github.com/vpineda1996/wsfetch/pkg/endpoints"
+	"github.com/vpnda/wsfetch/internal/httputil"
+	"github.com/vpnda/wsfetch/pkg/auth/creds"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/endpoints"
 	"go.uber.org/zap"
 )
 

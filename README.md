@@ -33,7 +33,7 @@ A command-line tool for fetching and displaying Wealthsimple account information
 
 1. Clone the repository:
    ```
-   git clone https://github.com/vpineda1996/wsfetch.git
+   git clone https://github.com/vpnda/wsfetch.git
    cd wsfetch
    ```
 

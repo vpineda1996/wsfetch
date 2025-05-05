@@ -10,9 +10,9 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
-	"github.com/vpineda1996/wsfetch/internal/httputil"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
-	"github.com/vpineda1996/wsfetch/pkg/endpoints"
+	"github.com/vpnda/wsfetch/internal/httputil"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/endpoints"
 )
 
 func Test_Client_2FA(t *testing.T) {

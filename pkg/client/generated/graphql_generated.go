@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/vpineda1996/wsfetch/internal/marshalling"
+	"github.com/vpnda/wsfetch/internal/marshalling"
 )
 
 // Account includes the GraphQL fields of Account requested by the fragment Account.

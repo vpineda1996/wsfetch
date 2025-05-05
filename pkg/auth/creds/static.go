@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/samber/lo"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
 )
 
 type StaticTokenFetcher types.Session

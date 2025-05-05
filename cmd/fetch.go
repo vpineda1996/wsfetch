@@ -12,10 +12,10 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
-	"github.com/vpineda1996/wsfetch/pkg/base"
-	"github.com/vpineda1996/wsfetch/pkg/client"
-	"github.com/vpineda1996/wsfetch/pkg/client/generated"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/base"
+	"github.com/vpnda/wsfetch/pkg/client"
+	"github.com/vpnda/wsfetch/pkg/client/generated"
 )
 
 // fetchCmd represents the fetch command

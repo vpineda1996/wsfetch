@@ -15,9 +15,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
-	"github.com/vpineda1996/wsfetch/pkg/auth/cfetch"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
-	"github.com/vpineda1996/wsfetch/pkg/endpoints"
+	"github.com/vpnda/wsfetch/pkg/auth/cfetch"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/endpoints"
 	"go.uber.org/zap"
 )
 

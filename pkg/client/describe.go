@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vpineda1996/wsfetch/pkg/client/generated"
+	"github.com/vpnda/wsfetch/pkg/client/generated"
 )
 
 // GetActivityDescription returns a description for the given activity

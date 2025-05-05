@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/vpineda1996/wsfetch/pkg/base"
-	"github.com/vpineda1996/wsfetch/pkg/client/generated"
-	"github.com/vpineda1996/wsfetch/pkg/endpoints"
+	"github.com/vpnda/wsfetch/pkg/base"
+	"github.com/vpnda/wsfetch/pkg/client/generated"
+	"github.com/vpnda/wsfetch/pkg/endpoints"
 )
 
 type Transaction struct {

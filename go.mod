@@ -1,4 +1,4 @@
-module github.com/vpineda1996/wsfetch
+module github.com/vpnda/wsfetch
 
 go 1.22.2
 

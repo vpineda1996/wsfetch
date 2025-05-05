@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/vpineda1996/wsfetch/pkg/client/generated"
+	"github.com/vpnda/wsfetch/pkg/client/generated"
 )
 
 func (c *client) SecurityIDToSymbol(ctx context.Context, securityID string) (SecuritySymbol, error) {

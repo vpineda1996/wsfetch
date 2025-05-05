@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
 )
 
 type cli struct {

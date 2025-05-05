@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vpineda1996/wsfetch/internal/httputil"
-	"github.com/vpineda1996/wsfetch/pkg/auth/types"
+	"github.com/vpnda/wsfetch/internal/httputil"
+	"github.com/vpnda/wsfetch/pkg/auth/types"
 )
 
 func ExtendHeaders(h *http.Header, wssid string, otpClaim string) {
