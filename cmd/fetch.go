@@ -15,19 +15,18 @@ import (
 	"github.com/vpnda/wsfetch/pkg/auth/types"
 	"github.com/vpnda/wsfetch/pkg/base"
 	"github.com/vpnda/wsfetch/pkg/client"
-	"github.com/vpnda/wsfetch/pkg/client/generated"
 )
 
 // fetchCmd represents the fetch command
 var fetchCmd = &cobra.Command{
 	Use:   "fetch",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Fetches financial data from your brokerage account.",
+	Long: `Fetches and displays financial data such as account balances and recent activity
+from your brokerage account.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+It can authenticate using a username/password or a previously saved session.
+If a session exists, it will be used; otherwise, you will be prompted for credentials.
+The session will be refreshed and saved for future use.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		fmt.Println("fetch called")
@@ -46,38 +45,30 @@ to quickly create a Cobra application.`,
 				Password: password,
 			})
 			serializeSession(lo.Must(authClient.Fetcher.GetSession(ctx)))
-			c = lo.Must(client.NewClient(ctx, authClient))
+			c = client.NewCachingClient(lo.Must(client.NewClient(ctx, authClient)))
 		} else {
 			fmt.Println("Loaded session from file")
 			authClient := base.AuthClientFromSession(session)
 			serializeSession(lo.Must(authClient.Fetcher.GetSession(ctx)))
-			c = lo.Must(client.NewClient(ctx, authClient))
+			c = client.NewCachingClient(lo.Must(client.NewClient(ctx, authClient)))
 		}
 
 		accounts := lo.Must(c.GetAccounts(ctx))
-		accountIds := lo.Map(accounts, func(a generated.Account, _ int) client.AccountId {
-			return client.AccountId(a.Id)
-		})
 		for _, account := range accounts {
-			fmt.Printf("Account: %s, ID: %s\n", *account.Type, account.Id)
+			fmt.Printf("Account: %s -- %s\n", account.Id, account.Financials.CurrentCombined.NetLiquidationValueV2.Amount)
+			activites := lo.Must(c.GetActivities(ctx,
+				[]client.AccountId{client.AccountId(account.Id)}, lo.ToPtr(time.Now().Add(-30*24*time.Hour)), lo.ToPtr(time.Now())))
+			for _, activity := range activites[client.AccountId(account.Id)] {
+				desc := lo.Must(client.GetActivityDescription(ctx, c, &activity))
+				fmt.Printf("%15s $%10s: %s\n", activity.OccurredAt.Format(time.DateOnly), client.GetFormattedAmount(&activity), desc)
+			}
 		}
-		trns := lo.Must(c.Transactions(ctx, accountIds, time.Now().Add(-30*time.Hour*24), lo.ToPtr(time.Now())))
-		prettyPrint(trns)
 	},
 }
 
 const (
 	sessionFile = "session.json"
 )
-
-func prettyPrint(v interface{}) {
-	b, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Println("Failed to marshal JSON:", err)
-		return
-	}
-	fmt.Println(string(b))
-}
 
 func serializeSession(sess *types.Session) {
 	sessFile, err := os.Create(sessionFile)

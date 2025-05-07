@@ -2712,6 +2712,11 @@ const (
 	ActivitiesOrderByOccurredAtAsc ActivitiesOrderBy = "OCCURRED_AT_ASC"
 )
 
+var AllActivitiesOrderBy = []ActivitiesOrderBy{
+	ActivitiesOrderByOccurredAtDesc,
+	ActivitiesOrderByOccurredAtAsc,
+}
+
 // Activity includes the GraphQL fields of ActivityFeedItem requested by the fragment Activity.
 // The GraphQL type's documentation follows.
 //
@@ -2728,7 +2733,7 @@ type Activity struct {
 	// Amount of the transaction
 	Amount string `json:"amount"`
 	// Sign of the amount (positive/negative)
-	AmountSign string `json:"amountSign"`
+	AmountSign AmountSign `json:"amountSign"`
 	// Quantity of the asset
 	AssetQuantity string `json:"assetQuantity"`
 	// Symbol of the asset
@@ -2822,7 +2827,7 @@ func (v *Activity) GetAftTransactionType() *string { return v.AftTransactionType
 func (v *Activity) GetAmount() string { return v.Amount }
 
 // GetAmountSign returns Activity.AmountSign, and is useful for accessing the field via an interface.
-func (v *Activity) GetAmountSign() string { return v.AmountSign }
+func (v *Activity) GetAmountSign() AmountSign { return v.AmountSign }
 
 // GetAssetQuantity returns Activity.AssetQuantity, and is useful for accessing the field via an interface.
 func (v *Activity) GetAssetQuantity() string { return v.AssetQuantity }
@@ -2998,7 +3003,7 @@ type __premarshalActivity struct {
 
 	Amount string `json:"amount"`
 
-	AmountSign string `json:"amountSign"`
+	AmountSign AmountSign `json:"amountSign"`
 
 	AssetQuantity string `json:"assetQuantity"`
 
@@ -3166,14 +3171,22 @@ type ActivityCondition struct {
 	// Filter by account ID
 	AccountIds []string `json:"accountIds"`
 	// Filter by date range
-	EndDate *time.Time `json:"-"`
+	StartDate *time.Time     `json:"-"`
+	EndDate   *time.Time     `json:"-"`
+	Types     []ActivityType `json:"types"`
 }
 
 // GetAccountIds returns ActivityCondition.AccountIds, and is useful for accessing the field via an interface.
 func (v *ActivityCondition) GetAccountIds() []string { return v.AccountIds }
 
+// GetStartDate returns ActivityCondition.StartDate, and is useful for accessing the field via an interface.
+func (v *ActivityCondition) GetStartDate() *time.Time { return v.StartDate }
+
 // GetEndDate returns ActivityCondition.EndDate, and is useful for accessing the field via an interface.
 func (v *ActivityCondition) GetEndDate() *time.Time { return v.EndDate }
+
+// GetTypes returns ActivityCondition.Types, and is useful for accessing the field via an interface.
+func (v *ActivityCondition) GetTypes() []ActivityType { return v.Types }
 
 func (v *ActivityCondition) UnmarshalJSON(b []byte) error {
 
@@ -3183,7 +3196,8 @@ func (v *ActivityCondition) UnmarshalJSON(b []byte) error {
 
 	var firstPass struct {
 		*ActivityCondition
-		EndDate json.RawMessage `json:"endDate"`
+		StartDate json.RawMessage `json:"startDate"`
+		EndDate   json.RawMessage `json:"endDate"`
 		graphql.NoUnmarshalJSON
 	}
 	firstPass.ActivityCondition = v
@@ -3191,6 +3205,20 @@ func (v *ActivityCondition) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &firstPass)
 	if err != nil {
 		return err
+	}
+
+	{
+		dst := &v.StartDate
+		src := firstPass.StartDate
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(time.Time)
+			err = marshalling.UnmarshalStringToDateTime(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ActivityCondition.StartDate: %w", err)
+			}
+		}
 	}
 
 	{
@@ -3212,7 +3240,11 @@ func (v *ActivityCondition) UnmarshalJSON(b []byte) error {
 type __premarshalActivityCondition struct {
 	AccountIds []string `json:"accountIds"`
 
+	StartDate json.RawMessage `json:"startDate"`
+
 	EndDate json.RawMessage `json:"endDate"`
+
+	Types []ActivityType `json:"types"`
 }
 
 func (v *ActivityCondition) MarshalJSON() ([]byte, error) {
@@ -3229,6 +3261,20 @@ func (v *ActivityCondition) __premarshalJSON() (*__premarshalActivityCondition, 
 	retval.AccountIds = v.AccountIds
 	{
 
+		dst := &retval.StartDate
+		src := v.StartDate
+		if src != nil {
+			var err error
+			*dst, err = marshalling.MarshalTimeToDateTime(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ActivityCondition.StartDate: %w", err)
+			}
+		}
+	}
+	{
+
 		dst := &retval.EndDate
 		src := v.EndDate
 		if src != nil {
@@ -3241,6 +3287,7 @@ func (v *ActivityCondition) __premarshalJSON() (*__premarshalActivityCondition, 
 			}
 		}
 	}
+	retval.Types = v.Types
 	return &retval, nil
 }
 
@@ -3255,6 +3302,7 @@ const (
 	ActivitySubtypeAft                    ActivitySubtype = "AFT"
 	ActivitySubtypeTransferFeeRefund      ActivitySubtype = "TRANSFER_FEE_REFUND"
 	ActivitySubtypeTransferIn             ActivitySubtype = "TRANSFER_IN"
+	ActivitySubtypeTransferOut            ActivitySubtype = "TRANSFER_OUT"
 	ActivitySubtypeFplInterest            ActivitySubtype = "FPL_INTEREST"
 	ActivitySubtypeBillPay                ActivitySubtype = "BILL_PAY"
 	ActivitySubtypeSend                   ActivitySubtype = "SEND"
@@ -3262,12 +3310,32 @@ const (
 	ActivitySubtypeIncentiveBonus         ActivitySubtype = "INCENTIVE_BONUS"
 )
 
+var AllActivitySubtype = []ActivitySubtype{
+	ActivitySubtypeSource,
+	ActivitySubtypeETransfer,
+	ActivitySubtypeETransferFunding,
+	ActivitySubtypePaymentCardTransaction,
+	ActivitySubtypeEft,
+	ActivitySubtypeAft,
+	ActivitySubtypeTransferFeeRefund,
+	ActivitySubtypeTransferIn,
+	ActivitySubtypeTransferOut,
+	ActivitySubtypeFplInterest,
+	ActivitySubtypeBillPay,
+	ActivitySubtypeSend,
+	ActivitySubtypeSendReceived,
+	ActivitySubtypeIncentiveBonus,
+}
+
 type ActivityType string
 
 const (
 	ActivityTypeInternalTransfer            ActivityType = "INTERNAL_TRANSFER"
 	ActivityTypeDiyBuy                      ActivityType = "DIY_BUY"
 	ActivityTypeDiySell                     ActivityType = "DIY_SELL"
+	ActivityTypeManagedBuy                  ActivityType = "MANAGED_BUY"
+	ActivityTypeManagedSell                 ActivityType = "MANAGED_SELL"
+	ActivityTypeCryptoTransfer              ActivityType = "CRYPTO_TRANSFER"
 	ActivityTypeDeposit                     ActivityType = "DEPOSIT"
 	ActivityTypeWithdrawal                  ActivityType = "WITHDRAWAL"
 	ActivityTypeRefund                      ActivityType = "REFUND"
@@ -3280,6 +3348,26 @@ const (
 	ActivityTypePromotion                   ActivityType = "PROMOTION"
 	ActivityTypeReferral                    ActivityType = "REFERRAL"
 )
+
+var AllActivityType = []ActivityType{
+	ActivityTypeInternalTransfer,
+	ActivityTypeDiyBuy,
+	ActivityTypeDiySell,
+	ActivityTypeManagedBuy,
+	ActivityTypeManagedSell,
+	ActivityTypeCryptoTransfer,
+	ActivityTypeDeposit,
+	ActivityTypeWithdrawal,
+	ActivityTypeRefund,
+	ActivityTypeInstitutionalTransferIntent,
+	ActivityTypeInterest,
+	ActivityTypeDividend,
+	ActivityTypeFundsConversion,
+	ActivityTypeNonResidentTax,
+	ActivityTypeP2pPayment,
+	ActivityTypePromotion,
+	ActivityTypeReferral,
+}
 
 // AllAccountFinancials includes the GraphQL fields of Identity requested by the fragment AllAccountFinancials.
 type AllAccountFinancials struct {
@@ -3614,6 +3702,18 @@ func (v *AllAccountFinancialsAccountsAccountConnectionPageInfo) GetEndCursor() s
 // GetTypename returns AllAccountFinancialsAccountsAccountConnectionPageInfo.Typename, and is useful for accessing the field via an interface.
 func (v *AllAccountFinancialsAccountsAccountConnectionPageInfo) GetTypename() *string {
 	return v.Typename
+}
+
+type AmountSign string
+
+const (
+	AmountSignPositive AmountSign = "positive"
+	AmountSignNegative AmountSign = "negative"
+)
+
+var AllAmountSign = []AmountSign{
+	AmountSignPositive,
+	AmountSignNegative,
 }
 
 // CustodianAccount includes the GraphQL fields of CustodianAccount requested by the fragment CustodianAccount.
@@ -4237,7 +4337,7 @@ func (v *FetchActivityFeedItemsActivityFeedItemsActivityFeedItemConnectionEdgesA
 }
 
 // GetAmountSign returns FetchActivityFeedItemsActivityFeedItemsActivityFeedItemConnectionEdgesActivityFeedItemEdgeNodeActivityFeedItem.AmountSign, and is useful for accessing the field via an interface.
-func (v *FetchActivityFeedItemsActivityFeedItemsActivityFeedItemConnectionEdgesActivityFeedItemEdgeNodeActivityFeedItem) GetAmountSign() string {
+func (v *FetchActivityFeedItemsActivityFeedItemsActivityFeedItemConnectionEdgesActivityFeedItemEdgeNodeActivityFeedItem) GetAmountSign() AmountSign {
 	return v.Activity.AmountSign
 }
 
@@ -4464,7 +4564,7 @@ type __premarshalFetchActivityFeedItemsActivityFeedItemsActivityFeedItemConnecti
 
 	Amount string `json:"amount"`
 
-	AmountSign string `json:"amountSign"`
+	AmountSign AmountSign `json:"amountSign"`
 
 	AssetQuantity string `json:"assetQuantity"`
 
@@ -5558,7 +5658,7 @@ type __FetchSecurityMarketDataInput struct {
 // GetId returns __FetchSecurityMarketDataInput.Id, and is useful for accessing the field via an interface.
 func (v *__FetchSecurityMarketDataInput) GetId() string { return v.Id }
 
-// The query or mutation executed by FetchActivityFeedItems.
+// The query executed by FetchActivityFeedItems.
 const FetchActivityFeedItems_Operation = `
 query FetchActivityFeedItems ($first: Int, $cursor: Cursor, $condition: ActivityCondition, $orderBy: [ActivitiesOrderBy!] = OCCURRED_AT_DESC) {
 	activityFeedItems(first: $first, after: $cursor, condition: $condition, orderBy: $orderBy) {
@@ -5632,7 +5732,7 @@ func FetchActivityFeedItems(
 	cursor *string,
 	condition *ActivityCondition,
 	orderBy []ActivitiesOrderBy,
-) (*FetchActivityFeedItemsResponse, error) {
+) (data_ *FetchActivityFeedItemsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "FetchActivityFeedItems",
 		Query:  FetchActivityFeedItems_Operation,
@@ -5643,10 +5743,9 @@ func FetchActivityFeedItems(
 			OrderBy:   orderBy,
 		},
 	}
-	var err_ error
 
-	var data_ FetchActivityFeedItemsResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &FetchActivityFeedItemsResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -5654,10 +5753,10 @@ func FetchActivityFeedItems(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by FetchAllAccountFinancials.
+// The query executed by FetchAllAccountFinancials.
 const FetchAllAccountFinancials_Operation = `
 query FetchAllAccountFinancials ($identityId: ID!, $startDate: Date, $pageSize: Int = 25, $cursor: String) {
 	identity(id: $identityId) {
@@ -5871,7 +5970,7 @@ func FetchAllAccountFinancials(
 	startDate *time.Time,
 	pageSize *int,
 	cursor *string,
-) (*FetchAllAccountFinancialsResponse, error) {
+) (data_ *FetchAllAccountFinancialsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "FetchAllAccountFinancials",
 		Query:  FetchAllAccountFinancials_Operation,
@@ -5882,10 +5981,9 @@ func FetchAllAccountFinancials(
 			Cursor:     cursor,
 		},
 	}
-	var err_ error
 
-	var data_ FetchAllAccountFinancialsResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &FetchAllAccountFinancialsResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -5893,10 +5991,10 @@ func FetchAllAccountFinancials(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }
 
-// The query or mutation executed by FetchSecurityMarketData.
+// The query executed by FetchSecurityMarketData.
 const FetchSecurityMarketData_Operation = `
 query FetchSecurityMarketData ($id: ID!) {
 	security(id: $id) {
@@ -5959,7 +6057,7 @@ func FetchSecurityMarketData(
 	ctx_ context.Context,
 	client_ graphql.Client,
 	id string,
-) (*FetchSecurityMarketDataResponse, error) {
+) (data_ *FetchSecurityMarketDataResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "FetchSecurityMarketData",
 		Query:  FetchSecurityMarketData_Operation,
@@ -5967,10 +6065,9 @@ func FetchSecurityMarketData(
 			Id: id,
 		},
 	}
-	var err_ error
 
-	var data_ FetchSecurityMarketDataResponse
-	resp_ := &graphql.Response{Data: &data_}
+	data_ = &FetchSecurityMarketDataResponse{}
+	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
 		ctx_,
@@ -5978,5 +6075,5 @@ func FetchSecurityMarketData(
 		resp_,
 	)
 
-	return &data_, err_
+	return data_, err_
 }

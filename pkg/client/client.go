@@ -11,26 +11,22 @@ import (
 	"github.com/vpnda/wsfetch/pkg/endpoints"
 )
 
-type Transaction struct {
-	Date              time.Time
-	Merchant          string
-	Category          string
-	Account           string
-	OriginalStatement string
-	Amount            string
-	Description       string
-}
-
 type AccountId string
 type SecuritySymbol string
 
 // Client is able to make requests to Wealthsimple using graphql queries
 type Client interface {
-	GetAccounts(ctx context.Context) ([]generated.Account, error)
-	Transactions(ctx context.Context, accountIds []AccountId, from time.Time, until *time.Time) (map[AccountId][]Transaction, error)
+	GetAccount(ctx context.Context, accountId string) (*generated.AccountWithFinancials, error)
+	GetAccounts(ctx context.Context) ([]generated.AccountWithFinancials, error)
+	GetActivities(ctx context.Context, accountIds []AccountId, from *time.Time, until *time.Time) (map[AccountId][]generated.Activity, error)
 
-	SecurityIDToSymbol(ctx context.Context, s string) (SecuritySymbol, error)
+	GetSecurityMarketData(ctx context.Context, securityID string) (*generated.SecurityMarketData, error)
 }
+
+var (
+	_ Client = &client{}
+	_ Client = &cachingClient{}
+)
 
 type client struct {
 	// Trade Client
@@ -39,10 +35,17 @@ type client struct {
 	// Profile or User id, normally in the form
 	// user-psde1sas14
 	Identities *base.TokenInformation
+}
 
+type cachingClient struct {
+	delegate Client
 	// Cache functions for security market data
-	SecurityMarketDataCacheGetter func(securityID string) (*generated.SecurityMarketData, bool)
-	SecurityMarketDataCacheSetter func(securityID string, data *generated.SecurityMarketData)
+	securityMarketDataCacheGetter func(securityID string) (*generated.SecurityMarketData, bool)
+	securityMarketDataCacheSetter func(securityID string, data *generated.SecurityMarketData)
+
+	// Cache functions for account data
+	accountCacheGetter func(accountID string) (*generated.AccountWithFinancials, bool)
+	accountCacheSetter func(accountID string, data *generated.AccountWithFinancials)
 }
 
 func NewClient(ctx context.Context, c *base.Wealthsimple) (Client, error) {

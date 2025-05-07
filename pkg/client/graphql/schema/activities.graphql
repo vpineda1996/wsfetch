@@ -35,7 +35,7 @@ type ActivityFeedItem {
   amount: String!
   
   """Sign of the amount (positive/negative)"""
-  amountSign: String!
+  amountSign: AmountSign!
   
   """Quantity of the asset"""
   assetQuantity: String!
@@ -157,7 +157,9 @@ input ActivityCondition {
   accountIds: [ID!]
   
   """Filter by date range"""
+  startDate: Date
   endDate: Date
+  types: [ActivityType!]
 }
 
 """
@@ -171,38 +173,49 @@ enum ActivitiesOrderBy {
   OCCURRED_AT_ASC
 }
 
+enum AmountSign {
+  positive
+  negative
+}
 
 enum ActivityType {
-    INTERNAL_TRANSFER
-    DIY_BUY
-    DIY_SELL
-    DEPOSIT
-    WITHDRAWAL
-    REFUND
-    INSTITUTIONAL_TRANSFER_INTENT
-    INTEREST
-    DIVIDEND
-    FUNDS_CONVERSION
-    NON_RESIDENT_TAX
-    P2P_PAYMENT
-    PROMOTION
-    REFERRAL
+  INTERNAL_TRANSFER
+  
+  DIY_BUY
+  DIY_SELL
+  MANAGED_BUY
+  MANAGED_SELL
+  CRYPTO_TRANSFER
+
+  DEPOSIT
+  WITHDRAWAL
+  REFUND
+  INSTITUTIONAL_TRANSFER_INTENT
+  INTEREST
+  DIVIDEND
+  FUNDS_CONVERSION
+  NON_RESIDENT_TAX
+  P2P_PAYMENT
+  PROMOTION
+  REFERRAL
 }
 
 enum ActivitySubtype {
-    SOURCE
-    E_TRANSFER
-    E_TRANSFER_FUNDING
-    PAYMENT_CARD_TRANSACTION
-    EFT
-    AFT
-    TRANSFER_FEE_REFUND
-    TRANSFER_IN
-    
-    FPL_INTEREST
-    BILL_PAY
+  SOURCE
+  E_TRANSFER
+  E_TRANSFER_FUNDING
+  PAYMENT_CARD_TRANSACTION
+  EFT
+  AFT
 
-    SEND
-    SEND_RECEIVED
-    INCENTIVE_BONUS
+  TRANSFER_FEE_REFUND
+  TRANSFER_IN
+  TRANSFER_OUT
+  
+  FPL_INTEREST
+  BILL_PAY
+
+  SEND
+  SEND_RECEIVED
+  INCENTIVE_BONUS
 }

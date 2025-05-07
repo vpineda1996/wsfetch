@@ -190,6 +190,7 @@ func AuthClientFromFetcher(fetcher creds.SessionFetcher) *Wealthsimple {
 		Jar:     jar,
 		delegate: &http.Client{
 			Jar: jar,
+			// Uncomment the following lines for debugging HTTP requests/responses
 			// Transport: httputil.RoundTripperFunc(func(r *http.Request) (*http.Response, error) {
 			// 	d, _ := ghttputil.DumpRequest(r, true)
 			// 	fmt.Println(string(d))
