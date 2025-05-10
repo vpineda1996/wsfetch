@@ -6,14 +6,36 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/vpnda/wsfetch/pkg/client/generated"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
+var (
+	outflowActities = []generated.ActivityType{
+		generated.ActivityTypeWithdrawal,
+		generated.ActivityTypeDiyBuy,
+		generated.ActivityTypeManagedBuy,
+	}
+	inflowActivities = []generated.ActivityType{
+		generated.ActivityTypeDeposit,
+		generated.ActivityTypeDiySell,
+		generated.ActivityTypeManagedSell,
+	}
+)
+
+// GetFormattedAmount returns a formatted amount for the given activity
+// negative are considered income, positive are considered outflows or expenses
 func GetFormattedAmount(act *generated.Activity) string {
 	prefix := ""
-	if act.AmountSign == generated.AmountSignNegative {
+	// We have to introspectively check the type of the account
+	// as the hints from wealthsimple aren't great
+
+	if lo.Contains(outflowActities, act.Type) {
+		// DO NOTHING
+	} else if lo.Contains(inflowActivities, act.Type) ||
+		act.AmountSign == generated.AmountSignNegative {
 		prefix = "-"
 	}
 	return fmt.Sprintf("%s%s", prefix, act.Amount)
