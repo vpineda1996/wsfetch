@@ -17,7 +17,6 @@ var (
 		generated.ActivityTypeWithdrawal,
 		generated.ActivityTypeDiyBuy,
 		generated.ActivityTypeManagedBuy,
-		generated.ActivityTypeP2pPayment,
 	}
 	inflowActivities = []generated.ActivityType{
 		generated.ActivityTypeDeposit,
@@ -41,6 +40,10 @@ func GetFormattedAmount(act *generated.Activity) string {
 	} else if lo.Contains(inflowActivities, act.Type) ||
 		act.AmountSign == generated.AmountSignNegative {
 		prefix = "-"
+	} else if act.Type == generated.ActivityTypeP2pPayment {
+		if act.SubType == generated.ActivitySubtypeSend {
+			prefix = "-"
+		}
 	}
 	return fmt.Sprintf("%s%s", prefix, act.Amount)
 }
