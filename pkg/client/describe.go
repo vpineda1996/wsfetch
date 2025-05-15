@@ -17,11 +17,15 @@ var (
 		generated.ActivityTypeWithdrawal,
 		generated.ActivityTypeDiyBuy,
 		generated.ActivityTypeManagedBuy,
+		generated.ActivityTypeP2pPayment,
 	}
 	inflowActivities = []generated.ActivityType{
 		generated.ActivityTypeDeposit,
 		generated.ActivityTypeDiySell,
 		generated.ActivityTypeManagedSell,
+		generated.ActivityTypeInterest,
+		generated.ActivityTypeDividend,
+		generated.ActivityTypeRefund,
 	}
 )
 
